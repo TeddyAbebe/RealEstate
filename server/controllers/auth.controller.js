@@ -37,7 +37,7 @@ export const signIn = async (req, res, next) => {
     // Create Token
     const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET);
 
-    // Leave Password
+    // Separate the Password
     const { password: pass, ...restUserInfo } = validUser._doc;
 
     // Response
