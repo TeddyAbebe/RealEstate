@@ -1,32 +1,81 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUp() {
+  const [formData, setFormData] = useState({});
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/signUp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (data.success === false) {
+        setError(data.message);
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      setError(null);
+      navigate("/sign-in");
+    } catch (error) {
+      setLoading(false);
+      setError(error.message);
+    }
+  };
+
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl text-center font-semibold my-7">Sign Up</h1>
 
-      <form className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           id="userName"
           type="text"
           placeholder="User Name"
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
         <input
           id="email"
           type="email"
-          placeholder="User Name"
+          placeholder="Your Email"
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
         <input
           id="password"
           type="password"
           placeholder="User Name"
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
 
-        <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
-          Sign Up
+        {error && <p className="text-red-500">{error}</p>}
+
+        <button
+          disabled={loading}
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
+        >
+          {loading ? "Loading..." : " Sign Up"}
         </button>
       </form>
 
@@ -34,7 +83,9 @@ export default function SignUp() {
         <p>Have an account ?</p>
 
         <Link to={"/sign-in"}>
-          <span className="text-blue-800 font-semibold tracking-wider hover:underline">Sign In</span>
+          <span className="text-blue-800 font-semibold tracking-wider hover:underline">
+            Sign In
+          </span>
         </Link>
       </div>
     </div>
