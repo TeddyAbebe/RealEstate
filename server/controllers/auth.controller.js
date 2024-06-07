@@ -3,6 +3,7 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { errorHandler } from "../utils/error.js";
 
+// User Register Controller
 export const signUp = async (req, res, next) => {
   const { userName, email, password } = req.body;
 
@@ -21,6 +22,8 @@ export const signUp = async (req, res, next) => {
     next(error);
   }
 };
+
+// User SignIn Controller
 export const signIn = async (req, res, next) => {
   const { email, password } = req.body;
   try {
