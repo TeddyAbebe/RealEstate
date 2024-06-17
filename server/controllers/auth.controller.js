@@ -64,6 +64,7 @@ export const signOut = async (req, res, next) => {
   }
 };
 
+// Google Registration
 export const google = async (req, res, next) => {
   try {
     const user = await User.findOne({ email: req.body.email });
