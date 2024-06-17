@@ -14,6 +14,9 @@ import {
   deleteUserFailure,
   deleteUserStart,
   deleteUserSuccess,
+  logOutUserFailure,
+  logOutUserStart,
+  logOutUserSuccess,
   updateUserFailure,
   updateUserStart,
   updateUserSuccess,
@@ -71,10 +74,12 @@ export default function Profile() {
     );
   };
 
+  // Handle Input fields Change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  // Handle Update Profile Function
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -101,6 +106,7 @@ export default function Profile() {
     }
   };
 
+  // Handle Delete Account Function
   const handleDeleteUser = async () => {
     try {
       dispatch(deleteUserStart());
@@ -118,6 +124,25 @@ export default function Profile() {
       dispatch(deleteUserSuccess(data));
     } catch (error) {
       dispatch(deleteUserFailure(error.message));
+    }
+  };
+
+  // Handle Logout Function
+  const handleLogOut = async () => {
+    try {
+      dispatch(logOutUserStart());
+
+      const res = await fetch(`/api/auth/signOut`);
+
+      const data = await res.json();
+
+      if (data.success === false) {
+        return;
+      }
+
+      dispatch(logOutUserSuccess(data));
+    } catch (error) {
+      dispatch(logOutUserFailure(error.message));
     }
   };
 
@@ -230,7 +255,9 @@ export default function Profile() {
           Delete Account
         </span>
 
-        <span className="text-red-700 cursor-pointer">Sign Out</span>
+        <span onClick={handleLogOut} className="text-red-700 cursor-pointer">
+          Log Out
+        </span>
       </div>
     </div>
   );
