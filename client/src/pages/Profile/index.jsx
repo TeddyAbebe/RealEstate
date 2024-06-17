@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectUser } from "../../redux/user/selectors";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -10,17 +10,25 @@ import {
 import { app } from "../../utils/firebase";
 import { CiCircleCheck } from "react-icons/ci";
 import { AiFillEdit } from "react-icons/ai";
+import {
+  updateUserFailure,
+  updateUserStart,
+  updateUserSuccess,
+} from "../../redux/user/userSlice";
 
 export default function Profile() {
   const fileRef = useRef(null);
-  const { currentUser } = useSelector(selectUser);
+  const dispatch = useDispatch();
+  const { currentUser, loading, error } = useSelector(selectUser);
   const [file, setFile] = useState(undefined);
   const [filePercentage, setFilePercentage] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
   const [formData, setFormData] = useState({});
   const [isUploading, setIsUploading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
+  // Profile Picture Update
   const handleFileUpload = (file) => {
     const storage = getStorage(app);
     const fileName = new Date().getTime() + file.name;
@@ -60,6 +68,36 @@ export default function Profile() {
     );
   };
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        return;
+      }
+
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+    }
+  };
+
   useEffect(() => {
     if (file) {
       setFilePercentage(0);
@@ -70,8 +108,8 @@ export default function Profile() {
 
   return (
     <div className="p-3 max-w-lg mx-auto">
-      <h1 className="text-3xl font-semibold text-center my-7"></h1>
-      <form className="flex flex-col gap-4">
+      <h1 className="text-3xl font-semibold text-center mb-7">Profile</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="file"
           ref={fileRef}
@@ -119,18 +157,30 @@ export default function Profile() {
           )}
         </p>
 
+        <p className="text-red-700 self-center font-semibold tracking-wide">
+          {error ? error : ""}
+        </p>
+
+        <p className="text-green-700 self-center font-semibold tracking-wide">
+          {updateSuccess ? "User Updated Successfully!" : ""}
+        </p>
+
         <input
           type="text"
-          id="username"
+          id="userName"
           placeholder="User Name"
+          defaultValue={currentUser.userName}
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
 
         <input
           type="email"
           id="email"
           placeholder="Email"
+          defaultValue={currentUser.email}
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
 
         <input
@@ -138,10 +188,14 @@ export default function Profile() {
           id="password"
           placeholder="Password"
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
 
-        <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
-          Update
+        <button
+          disabled={loading}
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
+        >
+          {loading ? "Updating..." : "Update"}
         </button>
       </form>
 
